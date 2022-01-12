@@ -502,6 +502,9 @@
 		keyCode -= 49
 		const tools = Object.keys(TOOLS)
 
+		const _EXC = ['textarea','number','text']
+		const isInputForm = _EXC.indexOf(e.target.type) != -1
+
 		if ( e.code == 'KeyC' && KEYCODES[META] && w.ACTIVE ) {
 
 			const { start, end } = w.ACTIVE
@@ -521,7 +524,7 @@
 		    await navigator.clipboard.writeText(_CLIP)
 			console.log(`[App] text copied\n`, _CLIP)
 
-		} else if ( ARROWKEYS.indexOf(e.code) != -1 && w.ACTIVE ) {
+		} else if ( ARROWKEYS.indexOf(e.code) != -1 && w.ACTIVE && !isInputForm ) {
 			console.log(`[App] move ${e.code}`,)
 
 			highlight = []
@@ -551,9 +554,8 @@
 			MODE = tools[keyCode]
 		} else if ( e.key == 'Backspace' && w.ACTIVE ) {
 
-			const _EXC = ['textarea','number','text']
 
-			if (_EXC.indexOf(e.target.type) == -1) {
+			if (!isInputForm) {
 
 				console.log('[App] deleting layer')
 				let cp = data
@@ -684,16 +686,16 @@
 		</nav>
 		<div 
 			id="workspace"
-			class="grow flex row-center-center h100pc p1 overflow-auto">
+			class="grow block h100pc p1 overflow-auto">
 			<div 
 				id="canvas"
-				class="rel monospace pre user-select-none">
+				class="block rel monospace user-select-none">
 				{#each (new Array(height)) as n, y}
-					<div class="flex row  pre no-grow pop">
+					<div class="line flex no-grow pop">
 						{#each (new Array(width)) as n, x}
 							<span
 							class:filled={ highlight?.[y]?.[x] }
-								class="char flex pre rel"
+								class="char rel"
 								on:mousemove={e => onMousemove(y,x)}
 								on:mouseup={e => onMouseup(y,x)}
 								on:mousedown={e => onMousedown(y,x)}

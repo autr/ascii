@@ -10,15 +10,15 @@ main
 	font-smooth: never
 	-webkit-font-smoothing: none
 	font-family: menlo,lucida console,consolas,courier new,courier,monospace!important
-	line-height: 1em!important
-	*
-		line-height: 1em!important
+	// line-height: 1em!important
+	// *
+	// 	line-height: 1em!important
 
 	input[type=number]
 		max-width: 5em
- 	// .char
- 	// 	&:hover
- 	// 		background-color: white
- 	#canvas
- 		letter-spacing: 0px!important
- 		font-size: 16px!important
+	.char
+		flex-basis: 8px
+		min-width: 8px
+		max-width: 8px
+		flex-grow: 0
+		height: 13px

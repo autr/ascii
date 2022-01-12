@@ -57578,12 +57578,12 @@ a.color-e, select.color-e, button.color-e, .button.color-e {
 main {
   font-smooth: never;
   -webkit-font-smoothing: none;
-  font-family: menlo, lucida console, consolas, courier new, courier, monospace !important;
-  line-height: 1em !important; }
-  main * {
-    line-height: 1em !important; }
+  font-family: menlo, lucida console, consolas, courier new, courier, monospace !important; }
   main input[type=number] {
     max-width: 5em; }
-    main input[type=number] #canvas {
-      letter-spacing: 0px !important;
-      font-size: 16px !important; }
+  main .char {
+    flex-basis: 8px;
+    min-width: 8px;
+    max-width: 8px;
+    flex-grow: 0;
+    height: 13px; }
