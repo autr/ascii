@@ -66,8 +66,8 @@
   --borders: 1px;
   --column-spacing: 2em;
   --icon-padding: 2.2em;
-  --input-padding: 0.6em 1em;
-  --button-padding: 1em 3em;
+  --input-padding: 0.4em 0.4em;
+  --button-padding: 0.4em 1em;
   --font: sans-serif;
   --font-monospace: Ubuntu Mono, Source Code Pro, monospace;
   --font-serif: ITC Garamond Std Book Narrow, serif;
@@ -57582,3 +57582,8 @@ main {
   line-height: 1em !important; }
   main * {
     line-height: 1em !important; }
+  main input[type=number] {
+    max-width: 5em; }
+    main input[type=number] #canvas {
+      letter-spacing: 0px !important;
+      font-size: 16px !important; }
