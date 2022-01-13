@@ -57582,8 +57582,4 @@ main {
   main input[type=number] {
     max-width: 5em; }
   main .char {
-    flex-basis: 8px;
-    min-width: 8px;
-    max-width: 8px;
-    flex-grow: 0;
-    height: 13px; }
+    flex-grow: 0; }
