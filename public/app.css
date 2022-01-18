@@ -57583,3 +57583,5 @@ main {
     max-width: 5em; }
   main .char {
     flex-grow: 0; }
+  main input, main textbox {
+    background-color: var(--bg-sink); }

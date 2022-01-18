@@ -34,7 +34,7 @@
 				<div 
 					class:fade={!$_KEYBOARD_ACTIVE}
 					class:filled={$_KEYBOARD_ACTIVE && $_KEYCODES[KEYS[i+(idx*12)]]}
-					class="grow ptb0-5 pointer flex column-center-center br1-solid bb1-solid no-basis"
+					class="grow ptb0-5 pointer flex column-center-center br1-solid bb1-solid no-basis bg"
 					class:none={!current[i+(idx*12)]}>
 					<span class="pb0-4">{KEYS_ICONS[i+(idx*12)]} </span> 
 					<span>{current[i+(idx*12)]}</span>

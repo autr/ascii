@@ -21,7 +21,7 @@
 	w.DATA = []
 	w.OUT = []
 	w.FONTSIZE = 13
-	w.MODE= MODE_CHAR
+	w.MODE= MODE_RECT
 	w.HOVER = null
 	w.HIGH = []
 	w.ACTIVE = null
@@ -483,12 +483,12 @@
 		</nav>
 		<div 
 			id="workspace"
-			class="grow flex column-center-flex-start rel block h100pc p1 overflow-hidden bg">
+			class="grow flex column-center-space-between rel block h100pc p1 overflow-hidden bg sink">
 			<div 
 				id="canvas"
-				class="flex grow column-center-flex-start rel monospace user-select-none overflow-auto">
+				class="flex column-center-flex-start rel monospace user-select-none bg overflow-auto  b1-solid">
 				{#each w.OUT as line, y}
-					<div class="no-grow sink">
+					<div class="no-grow">
 						{#each line as char, x}
 							<span
 								style={fontStyle}
