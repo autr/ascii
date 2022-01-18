@@ -31,6 +31,13 @@ export const BLOCKS = ['▀','▁','▂','▃','▄','▅','▆','▇','█','�
 
 
 export const KEYS = [ 'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight', 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Quote', 'Backslash', 'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash' ]
+export const KEYS_ICONS = [ 'Q','W','E','R','T','Y','U','I','O','P','[',']','A','S','D','F','G','H','J','K','L',';','\'','\\','Z','X','C','V','B','N','M',',','.','/']
 
 
 export const LOREM = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi id sagittis orci, non rhoncus velit. Nam sed tellus cursus, interdum nulla ac, iaculis libero. Nam ullamcorper nulla sem, id gravida dui posuere vitae. Morbi finibus ultrices ligula id varius. Ut lobortis ornare nisl in efficitur. Mauris viverra est malesuada, feugiat tellus in, faucibus risus. Vivamus sed lacinia diam. Cras in ullamcorper lacus, ac euismod ex.'
+
+export const BOARDS = [
+	[...BLOCKS],
+	[...LINES.h,...LINES.v,...DIAGONAL],
+	[...SQUARE_CORNERS.tl,...SQUARE_CORNERS.tr,...SQUARE_CORNERS.bl,...SQUARE_CORNERS.br]
+]

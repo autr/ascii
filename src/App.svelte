@@ -7,7 +7,9 @@
 
 	import { setTextChars, setRectChars, setCharChars } from './Chars.js'
 	import { onKeyup, onKeydown } from './Keys.js'
+	import { _KEYCODES, _KEYBOARD_ACTIVE } from './Store.js'
 
+	import Keyboard from './Keyboard.svelte'
 
 	let STATES = {}
 
@@ -367,15 +369,32 @@
 		height: ${w.ACTIVE?.end?.y-w.ACTIVE?.start?.y}em;
 	`
 
+	let metaKeys = []
 
-	const onKeydownPre = e => (onKeydown(e) && draw())
-	const onKeyupPre = e => (onKeyup(e) && draw())
+	const onKeydownPre = e => {
+		console.log('[App] keydown ', e.code)
+		$_KEYCODES[e.code] = true
+		if (e.metaKey) metaKeys.push(e.code)
+		onKeydown( e, $_KEYCODES )
+		draw()
+	}
+	const onKeyupPre = e => {
+		console.log('[App] keyup ', e.code)
+		$_KEYCODES[e.code] = false
+		if (metaKeys.length > 0) {
+			for (const key of metaKeys) $_KEYCODES[key] = false
+			metaKeys = []
+		}
+		onKeyup( e, $_KEYCODES )
+		draw()
+	}
 
 </script>
 <svelte:window 
 	on:keydown={ onKeydownPre }
 	on:keyup={ onKeyupPre }
 	on:mouseup={ e => STATES.pressed = false } />
+<input type="text" id="capture" class="invisible hidden fixed" />
 <aside class="fixed l0 b0 p1 maxw24em filled z-index99 flex column cmb0-2 none">
 	<div>1
 		mode: {MODE}
@@ -467,12 +486,12 @@
 		</nav>
 		<div 
 			id="workspace"
-			class="grow flex row-center-flex-start block h100pc p1 overflow-auto bg">
+			class="grow flex column-center-flex-start rel block h100pc p1 overflow-hidden bg">
 			<div 
 				id="canvas"
-				class="flex column-center-flex-start rel monospace user-select-none sink">
+				class="flex grow column-center-flex-start rel monospace user-select-none overflow-auto">
 				{#each w.OUT as line, y}
-					<div class="no-grow">
+					<div class="no-grow sink">
 						{#each line as char, x}
 							<span
 								style={fontStyle}
@@ -503,6 +522,9 @@
 					</div>
 				{/each} -->
 			</div>
+
+			<Keyboard />
+
 		</div>
 		<section id="panel" class="column flex column-space-between-flex-start bb1-solid bl1-solid h100pc grow w16em maxw16em minw16em">
 			<div id="layers" class="flex overflow-auto column grow">
