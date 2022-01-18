@@ -5,8 +5,8 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w & pnpm run sass",
-    "sass": "node-sass src/app.sass public/app.css -w",
-    "start": "sirv public --no-clear"
+    "sass": "node-sass src/app.sass docs/app.css -w",
+    "start": "sirv docs --no-clear"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
