@@ -26,16 +26,16 @@
 	--font-size: 13px;
 	--line-height: 1em;
  
-	--bg: hsl( 0, 50%, 90% );
-	--bg-pop: hsl( 0, 50%, 92% );
-	--bg-popper: hsl( 0, 50%, 95% );
-	--bg-sink: hsl( 0, 50%, 88% );
-	--bg-sinker: hsl( 0, 50%, 84% );
-	--bg-sinkest: hsl( 0, 20%, 70% );
+	--bg: hsl( 250, 20%, 12% );
+	--bg-pop: hsl( 250, 20%, 12% );
+	--bg-popper: hsl( 250, 20%, 10% );
+	--bg-sink: hsl( 250, 20%, 8% );
+	--bg-sinker: hsl( 250, 20%, 5% );
+	--bg-sinkest: hsl( 250, 20%, 0% );
 
-	--color: hsl( 0, 5%, 25% );
-	--color-bright: hsl( 0, 5%, 15% );
-	--color-fade: hsl( 0, 5%, 60% );
+	--color: hsl( 0, 5%, 85% );
+	--color-bright: hsl( 0, 5%, 95% );
+	--color-fade: hsl( 0, 5%, 80% );
 	--color-success: hsl( 150, 65%, 30% );
 	--color-info: hsl( 200, 65%, 40% );
 	--color-error: hsl( 340, 95%, 40% );

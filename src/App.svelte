@@ -395,7 +395,7 @@
 	on:keyup={ onKeyupPre }
 	on:mouseup={ e => STATES.pressed = false } />
 <input type="text" id="capture" class="invisible hidden fixed" />
-<aside class="fixed l0 b0 p1 maxw24em filled z-index99 flex column cmb0-2 none">
+<aside class="sassis fixed l0 b0 p1 maxw24em filled z-index99 flex column cmb0-2 none">
 	<div>1
 		mode: {MODE}
 	</div>
@@ -413,7 +413,7 @@
 		{/each}
 	</div>
 </aside>
-<main class="bg fill flex flex column monospace">
+<main class="sassis bg fill flex flex column monospace">
 	<nav class="bb1-solid p1 h3em flex row-space-between-center ">
 		<div class="flex row-flex-start-center cmr1 w100pc">
 			{#if w.ACTIVE}
@@ -465,9 +465,6 @@
 					type="number" 
 					bind:value={w.height} />
 			{/if}
-		</div>
-		<div>
-			<button>copy</button>
 		</div>
 	</nav>
 	<!-- 
