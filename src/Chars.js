@@ -4,12 +4,15 @@ import { SQUARE_CORNERS, LINES, ARROWS, BLOCKS, KEYS, LOREM } from './Defs.js'
 import { MODE_RECT, MODE_TEXT, MODE_POINTER, MODE_SELECT, MODE_CHAR, SPACE } from './Defs.js'
 import { ALIGN_CENTER, ALIGN_END, ALIGN_START, ALIGN_JUSTIFY } from './Defs.js'
 
+
+const SAY = m => console.log(`[Chars] ${m}`)
+
 export function setRectChars() {
 
 	if (!w.ACTIVE || w?.ACTIVE?.type != MODE_RECT) return
 
 	let { start, end } = w.ACTIVE
-	console.log(`[App] setting rectangle:`, start, end)
+	SAY(`🟦 set`)
 
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) {
@@ -60,7 +63,9 @@ export function setRectChars() {
 
 export function setTextChars() {
 
-	if (!w.ACTIVE || w?.ACTIVE?.type != MODE_TEXT) return
+	if (!w.ACTIVE) return
+	if (w?.ACTIVE?.type != MODE_RECT) return
+	SAY(`🔠 set`)
 
 	let { start, end } = w.ACTIVE
 	const alignX = w.ACTIVE?.alignX || ALIGN_CENTER
@@ -70,6 +75,7 @@ export function setTextChars() {
 
 	const blockWidth = end.x - start.x
 	const blockHeight = end.y - start.y
+
 
 	// create lines
 
@@ -96,14 +102,16 @@ export function setTextChars() {
 
 	}
 
-	w.ACTIVE.chars.length = 0
+	// w.ACTIVE.chars.length = 0
 
+	// return 
 	const { lines } = w.ACTIVE
 	const yDiff = blockHeight - w.ACTIVE.lines.length
 	const aYCenter = alignY == ALIGN_CENTER && blockHeight > lines.length
 	const aXCenter = alignX == ALIGN_CENTER
 	const aYEnd = alignY == ALIGN_END && blockHeight > lines.length
 	const aXEnd = alignX == ALIGN_END
+
 
 	for (let y = start.y; y <= end.y; y++) {
 		for (let x = start.x; x <= end.x; x++) {
@@ -131,7 +139,9 @@ export function setTextChars() {
 			xx = Math.round(xx)
 
 			const char = line?.[xx]
-			w.ACTIVE.chars[y][x] = (!char || char == ' ') ? SPACE : char
+			// w.ACTIVE.chars[y][x] = (!char || char == ' ') ? SPACE : char
+
+			if (char) w.ACTIVE.chars[y][x] = char
 			if (!w.HIGH[y]) w.HIGH[y] = []
 			w.HIGH[y][x] = true
 		}
@@ -142,6 +152,7 @@ export function setTextChars() {
 export function setCharChars() {
 
 	if (!w.ACTIVE || w?.ACTIVE?.type != MODE_CHAR) return
+	SAY(`🅰️ set`)
 
 	let { start, end, inputs } = w.ACTIVE
 

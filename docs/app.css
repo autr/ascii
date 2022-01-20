@@ -78,8 +78,8 @@
   --font-size: 13px;
   --line-height: 1em;
   --bg: hsl( 250, 20%, 12% );
-  --bg-pop: hsl( 250, 20%, 12% );
-  --bg-popper: hsl( 250, 20%, 10% );
+  --bg-pop: hsl( 250, 20%, 15% );
+  --bg-popper: hsl( 250, 20%, 20% );
   --bg-sink: hsl( 250, 20%, 8% );
   --bg-sinker: hsl( 250, 20%, 5% );
   --bg-sinkest: hsl( 250, 20%, 0% );

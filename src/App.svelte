@@ -1,13 +1,13 @@
 <script>
 
 	import { SQUARE_CORNERS, LINES, ARROWS, BLOCKS, KEYS, LOREM } from './Defs.js'
-	import { MODE_RECT, MODE_TEXT, MODE_POINTER, MODE_SELECT, MODE_CHAR, SPACE } from './Defs.js'
+	import { MODE_RECT, MODE_POINTER, MODE_SELECT, MODE_CHAR, SPACE, MODES } from './Defs.js'
 	import { ALIGN_CENTER, ALIGN_END, ALIGN_START, ALIGN_JUSTIFY } from './Defs.js'
 	import { INPUT_KEYS } from './Defs.js'
 
 	import { setTextChars, setRectChars, setCharChars } from './Chars.js'
 	import { onKeyup, onKeydown } from './Keys.js'
-	import { _KEYCODES, _KEYBOARD_ACTIVE } from './Store.js'
+	import { _keys, _mode } from './Store.js'
 
 	import Keyboard from './Keyboard.svelte'
 
@@ -21,20 +21,12 @@
 	w.DATA = []
 	w.OUT = []
 	w.FONTSIZE = 13
-	w.MODE= MODE_RECT
 	w.HOVER = null
 	w.HIGH = []
 	w.ACTIVE = null
 	w.width = 40
 	w.height = 20
 
-	w.TOOLS = {
-		[MODE_POINTER]: {},
-		[MODE_SELECT]: {},
-		[MODE_RECT]: {},
-		[MODE_TEXT]: {},
-		[MODE_CHAR]: {}
-	}
 
 
 	w.KEYCODES = {}
@@ -58,12 +50,9 @@
 			w.ACTIVE.startOrigin = { ...layer.start }
 			w.ACTIVE.endOrigin = { ...layer.end }
 
-			setHighlight( w.ACTIVE )
-
-		} else {
-			w.HIGH = []
-			draw()
 		}
+
+		draw()
 	}
 
 	let IS_MOVING = false
@@ -82,7 +71,7 @@
 		cursor.start = { y, x }
 		cursor.end = { y, x }
 
-		if ( w.MODE== MODE_RECT ) {
+		if ( $_mode == MODE_RECT ) {
 			console.log('[App] create rect')
 			STATES[MODE_RECT] = true
 			w.ACTIVE = {
@@ -90,28 +79,16 @@
 				ref: createReference(),
 				chars: [], // OUT
 				...cursor,
+				text: 'Hello world', // PRE
 				fill: 17,
-				text: '', // PRE
 				corner: 0,
 				sides: 0,
-				inited: false
-			}
-			w.DATA = [ w.ACTIVE, ...w.DATA ]
-		} else if ( w.MODE== MODE_TEXT ) {
-			console.log('[App] create text')
-			STATES[MODE_TEXT] = true
-			w.ACTIVE = {
-				type: MODE_TEXT,
-				ref: createReference(),
-				chars: [], // OUT
-				...cursor,
-				text: 'Hello world', // PRE
 				inited: false,
-				alignX: ALIGN_CENTER,
-				alignY: ALIGN_CENTER
+				alignX: ALIGN_START,
+				alignY: ALIGN_CENTER,
 			}
 			w.DATA = [ w.ACTIVE, ...w.DATA ]
-		} else if ( w.MODE== MODE_CHAR ) {
+		} else if ( $_mode == MODE_CHAR ) {
 			console.log('[App] create chars')
 			STATES[MODE_CHAR] = true
 			w.ACTIVE = {
@@ -124,7 +101,7 @@
 				inited: false
 			}
 			w.DATA = [ w.ACTIVE, ...w.DATA ]
-		} else if ( w.MODE== MODE_SELECT ) {
+		} else if ( $_mode == MODE_SELECT ) {
 			console.log('[App] create select')
 			STATES[MODE_SELECT] = true
 			w.ACTIVE = {
@@ -134,7 +111,7 @@
 				inited: false
 			}
 			draw()
-		} else if (w.MODE== MODE_POINTER) {
+		} else if ($_mode == MODE_POINTER) {
 			console.log('[App] create pointer')
 			let layer = getLayer(y,x)
 			if (!layer) {
@@ -151,12 +128,12 @@
 			console.log(`[App] selected layer:`, layer)
 
 			w.ACTIVE = layer 
-			layer.origin = { ...cursor.start }
-			layer.startOrigin = { ...layer.start }
-			layer.endOrigin = { ...layer.end }
+			w.ACTIVE.origin = { ...cursor.start }
+			w.ACTIVE.startOrigin = { ...w.ACTIVE.start }
+			w.ACTIVE.endOrigin = { ...w.ACTIVE.end }
 
-			if (layer.type == MODE_RECT) setRectChars()
-			if (layer.type == MODE_TEXT) setTextChars()
+			setRectChars()
+			setTextChars()
 			draw()
 		}
 	}
@@ -226,15 +203,6 @@
 		}
 		// textbox
 
-		else if (STATES[MODE_TEXT]) {
-			console.log(`[App] drag textbox`)
-			w.ACTIVE.start = start
-			w.ACTIVE.end = end
-
-			draw()
-		}
-		// textbox
-
 		else if (STATES[MODE_SELECT]) {
 			console.log(`[App] drag select`)
 			w.ACTIVE.start = start
@@ -262,13 +230,12 @@
 			w.ACTIVE.end = {y,x}
 		}
 		if (STATES[MODE_RECT]) STATES[MODE_RECT] = false
-		if (STATES[MODE_TEXT]) STATES[MODE_TEXT] = false
 		if (STATES[MODE_CHAR]) STATES[MODE_CHAR] = false
 
 		IS_RESIZING = false
 		IS_MOVING = false
 
-		if ( w.ACTIVE?.type == MODE_RECT || w.ACTIVE?.type == MODE_TEXT) {
+		if ( w.ACTIVE?.type == MODE_RECT) {
 			if (w.ACTIVE.start.x == w.ACTIVE.end.x || w.ACTIVE.start.y == w.ACTIVE.end.y) {
 				console.log('[App] deleting tiny rectangle')
 				let cp = w.DATA
@@ -277,7 +244,7 @@
 
 
 				let layer = getLayer(y,x)
-				if (layer && w.MODE== layer?.type) {
+				if (layer && $_mode == layer?.type) {
 					console.log(`[App] selected with same tool type:`, layer)
 					w.ACTIVE = layer 
 				}
@@ -295,7 +262,7 @@
 
 	function setHighChars(y,x) {
 		if (!w.ACTIVE) return
-		if (w.ACTIVE.type == MODE_RECT || w.ACTIVE.type == MODE_TEXT || w.ACTIVE.type == MODE_SELECT) {
+		if (w.ACTIVE.type == MODE_RECT || w.ACTIVE.type == MODE_SELECT) {
 			return (x >= w.ACTIVE.start.x && x <= w.ACTIVE.end.x) && (y >= w.ACTIVE.start.y && y <= w.ACTIVE.end.y)
 		}
 	}
@@ -320,7 +287,7 @@
 		w.HIGH = []
 
 		const { start, end } = w.ACTIVE || {}
-		const isBlock = (w.ACTIVE) ? w.ACTIVE.type == MODE_RECT || w.ACTIVE.type == MODE_TEXT || w.ACTIVE.type == MODE_SELECT : false
+		const isBlock = (w.ACTIVE) ? w.ACTIVE.type == MODE_RECT || w.ACTIVE.type == MODE_SELECT : false
 
 		// const spans = document.getElementById('canvas')?.querySelectorAll('span') || []
 
@@ -372,20 +339,26 @@
 	let metaKeys = []
 
 	const onKeydownPre = e => {
-		console.log('[App] keydown ', e.code)
-		$_KEYCODES[e.code] = true
+		// console.log('[App] keydown ', e.code)
+		$_keys[e.code] = true
 		if (e.metaKey) metaKeys.push(e.code)
-		onKeydown( e, $_KEYCODES )
+		onKeydown( e )
 		draw()
 	}
 	const onKeyupPre = e => {
-		console.log('[App] keyup ', e.code)
-		$_KEYCODES[e.code] = false
+		// console.log('[App] keyup ', e.code)
+		$_keys[e.code] = false
 		if (metaKeys.length > 0) {
-			for (const key of metaKeys) $_KEYCODES[key] = false
+			for (const key of metaKeys) $_keys[key] = false
 			metaKeys = []
 		}
-		onKeyup( e, $_KEYCODES )
+		onKeyup( e )
+		draw()
+	}
+
+	function deselectAll() {
+		w.ACTIVE = null
+		w.HIGH = []
 		draw()
 	}
 
@@ -395,27 +368,10 @@
 	on:keyup={ onKeyupPre }
 	on:mouseup={ e => STATES.pressed = false } />
 <input type="text" id="capture" class="invisible hidden fixed" />
-<aside class="sassis fixed l0 b0 p1 maxw24em filled z-index99 flex column cmb0-2 none">
-	<div>1
-		mode: {MODE}
-	</div>
-	<div>
-		selected: {w.ACTIVE?.type || 'none'}
-		{outlineStyle}
-	</div>
-	<div>
-		pressed: {STATES?.pressed || 'none'}
-	</div>
-	<div class="flex column">
-		<span>layers:</span>
-		{#each w.DATA as layer, idx}
-			<span>{idx+1} {layer.type}</span>
-		{/each}
-	</div>
-</aside>
 <main class="sassis bg fill flex flex column monospace">
-	<nav class="bb1-solid p1 h3em flex row-space-between-center ">
+	<nav class="bb1-solid flex row-space-between-center ">
 		<div class="flex row-flex-start-center cmr1 w100pc">
+			<h1 class="pointer f2 filled h100pc flex p1">ascii</h1>
 			{#if w.ACTIVE}
 
 				{#if w.ACTIVE.type == MODE_RECT}
@@ -434,8 +390,6 @@
 						on:change={draw}
 						type="number" 
 						bind:value={w.ACTIVE.sides} />
-				{:else if w.ACTIVE.type == MODE_TEXT}
-
 					<span>x</span>
 					<select 
 						on:change={draw}
@@ -470,12 +424,12 @@
 	<!-- 
 								class:filled={ w.HIGH?.[y]?.[x] } -->
 	<div 
-		class="grow mode-{MODE} w100vw overflow-hidden flex row-flex-start-flex-start">
+		class="grow mode-{$_mode} w100vw overflow-hidden flex row-flex-start-flex-start">
 		<nav id="toolbar" class="column flex bb1-solid br1-solid h100pc ">
-			{#each Object.keys(w.TOOLS) as tool, idx}
+			{#each Object.keys(MODES) as tool, idx}
 				<button
-					on:mousedown={ e => (w.MODE= tool)}
-					class:filled={w.MODE== tool}
+					on:mousedown={ e => ($_mode = tool)}
+					class:filled={$_mode == tool}
 					class="b0-solid text-left">
 					[{idx+1}] {tool}
 				</button>
@@ -484,6 +438,9 @@
 		<div 
 			id="workspace"
 			class="grow flex column-center-space-between rel block h100pc p1 overflow-hidden bg sink">
+			<div 
+				on:mousedown={ deselectAll }
+				class="fill" />
 			<div 
 				id="canvas"
 				class="flex column-center-flex-start rel monospace user-select-none bg overflow-auto  b1-solid">
@@ -494,7 +451,7 @@
 								style={fontStyle}
 								class:b1-solid={w.HOVER?.y == y && w.HOVER?.x == x }
 								class="char rel"
-								class:pop={ w.HIGH?.[y]?.[x] }
+								class:filled={ w.HIGH?.[y]?.[x] }
 								on:mousemove={e => onMousemove(y,x)}
 								on:mouseup={e => onMouseup(y,x)}
 								on:mousedown={e => onMousedown(y,x)}
@@ -532,12 +489,12 @@
 							class="bb1-solid w100pc flex column">
 							<header 
 								class:filled={ layer?.ref == w.ACTIVE?.ref }
-								class="pointer plr1 w100pc flex row-space-between-center">
+								class="pointer plr1 ptb0-5 w100pc flex row-space-between-center">
 								<div>{layer.type}</div>
-								<div class="flex row-stretch-stretch h100pc cp0-5  cbl1-solid">
-									<div class="bl1-solid">S</div>
-									<div class="bl1-solid">M</div>
-								</div>
+								<!-- <div class="flex row-stretch-stretch h100pc cp0-5  cbl1-solid">
+									<div class="">S</div>
+									<div class="">M</div>
+								</div> -->
 							</header>
 						</div>
 					{/if}
@@ -545,7 +502,7 @@
 			</div>
 
 			{#if w.ACTIVE}
-				{#if w.ACTIVE.type == MODE_TEXT || w.ACTIVE.type == MODE_RECT }
+				{#if w.ACTIVE.type == MODE_RECT }
 					<div id="editor" class="flex column grow bt1-solid">
 						<div class="p1">INSPECTOR</div>
 
@@ -556,6 +513,10 @@
 					</div>
 				{/if}
 			{/if}
+			TEST
+						<textarea
+							on:keydown={draw}
+							class="flex grow b0-solid bt1-solid w100pc" />
 		</section>
 	</div>
 </main>
