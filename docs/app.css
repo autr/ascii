@@ -381,6 +381,26 @@ code[class*="language-"], pre[class*="language-"] {
 .token.entity {
   cursor: help; }
 
+.border {
+  border-width: var(--borders);
+  border-style: solid; }
+
+.bb {
+  border-bottom-width: var(--borders);
+  border-bottom-style: solid; }
+
+.bt {
+  border-top-width: var(--borders);
+  border-top-style: solid; }
+
+.br {
+  border-right-width: var(--borders);
+  border-right-style: solid; }
+
+.bl {
+  border-left-width: var(--borders);
+  border-left-style: solid; }
+
 /* backgrounds w. pop and sink */
 .clamp1 {
   display: box;
@@ -2302,6 +2322,12 @@ a.color-e, select.color-e, button.color-e, .button.color-e {
 
 .pointer {
   cursor: pointer; }
+
+.grab {
+  cursor: grab; }
+
+.grabbing {
+  cursor: grabbing; }
 
 .visible {
   opacity: 1; }
@@ -57585,3 +57611,5 @@ main {
     flex-grow: 0; }
   main input, main textbox {
     background-color: var(--bg-sink); }
+  main div, main span, main h1, main h2, main h3, main h4, main h5, main h6, main section, main aside, main main {
+    user-select: none; }

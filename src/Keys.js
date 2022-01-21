@@ -1,6 +1,7 @@
 import { MODE_CHAR, INPUT_KEYS, SPACE, BOARDS, KEYS, INPUT_ELEMENTS, MODES } from './Defs.js'
 import { get, set } from 'svelte/store'
 import { _keyboardIdx, _keys, _activeElement, _mode } from './Store.js'
+import * as diff from 'diff'
 
 navigator.keyboard.getLayoutMap().then(keyboardLayoutMap => {
 	w.keyboardLayoutMap = keyboardLayoutMap
@@ -14,6 +15,7 @@ navigator.keyboard.getLayoutMap().then(keyboardLayoutMap => {
 	input.dispatchEvent(new KeyboardEvent('keydown',{'code':'KeyQ'}));
 	console.log(`[Keys] keyboardLayoutMap`, Object.keys(keyboardLayoutMap), Object.values(keyboardLayoutMap))
 })
+
 
 const w = window
 
@@ -34,7 +36,7 @@ const getStores = e => {
 		mode: get(_mode),
 		modes: Object.keys(MODES),
 		activeElement: get(_activeElement),
-		number: e.keyCode - 49
+		number: (e?.keyCode || 0) - 49
 	}
 }
 
@@ -42,7 +44,34 @@ let keyboardWasTabbed = false
 
 const SAY = m => console.log(`[Keys] ${m}`)
 
+let previousTextValue = null
+let textboxIsPressed = false
+
+export async function onTextboxKeydown( e ) {
+	SAY(`👇👇 textbox keydown ${e.target.value.length} chars`)
+
+	if (e.key.length > 1 || e.metaKey || e.ctrlKey) return
+
+	const { target } = e
+	const { value, selectionStart, selectionEnd } = target
+	const { char } = getStores(e)
+	const { lengt } = value
+
+
+	e.target.value = w.ACTIVE.text = `${value.substring(0,selectionStart)}${char || e.key}${value.substring(selectionEnd)}`
+	e.target.setSelectionRange(selectionStart+1, selectionStart+1)
+
+	e.preventDefault()
+}
+export async function onTextboxKeyup( e ) {
+	SAY(`👆👆 textbox keyup ${e.target.value.length} chars`)
+
+
+}
+
 export async function onKeyup( e ) {
+
+	SAY(`👆 ${e.code}`)
 
 	let { 
 		mode, 
@@ -70,7 +99,7 @@ export async function onKeydown( e ) {
 
 	const layoutKey = keyboardLayoutMap.get(e.code)
 
-	// SAY(`👆 ${e.code}/${layoutKey}/${e.key}`)
+	SAY(`👇 ${e.code}`)
 
 	const tools = Object.keys(w.TOOLS)
 

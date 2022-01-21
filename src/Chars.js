@@ -67,7 +67,27 @@ export function setTextChars() {
 	if (w?.ACTIVE?.type != MODE_RECT) return
 	SAY(`🔠 set`)
 
-	let { start, end } = w.ACTIVE
+	// make exact copy
+
+	let { start, end, padding, whitespace } = { 
+		start: {...w.ACTIVE.start}, 
+		end: {...w.ACTIVE.end},
+		padding: w.ACTIVE.padding,
+		whitespace: w.ACTIVE.whitespace
+	}
+
+	// indent if no corners or sides
+
+	const bC = w.ACTIVE.corner >= 0 && w.ACTIVE.corner != null 
+	const bS = w.ACTIVE.sides >= 0 && w.ACTIVE.sides != null
+
+	if (bC || bS) {
+		start.x += 1 + padding
+		start.y += 1 + padding
+		end.x -= 1 + padding
+		end.y -= 1 + padding
+	}
+
 	const alignX = w.ACTIVE?.alignX || ALIGN_CENTER
 	const alignY = w.ACTIVE?.alignY || ALIGN_CENTER
 
@@ -142,6 +162,8 @@ export function setTextChars() {
 			// w.ACTIVE.chars[y][x] = (!char || char == ' ') ? SPACE : char
 
 			if (char) w.ACTIVE.chars[y][x] = char
+			if (!char && whitespace) w.ACTIVE.chars[y][x] = SPACE
+			// w.ACTIVE.chars[y][x] = '!'
 			if (!w.HIGH[y]) w.HIGH[y] = []
 			w.HIGH[y][x] = true
 		}

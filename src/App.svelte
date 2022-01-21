@@ -1,12 +1,14 @@
 <script>
-
+	import panzoom from 'panzoom'
+	import { onMount } from 'svelte'
+	import Panel from './Panel.svelte'
 	import { SQUARE_CORNERS, LINES, ARROWS, BLOCKS, KEYS, LOREM } from './Defs.js'
 	import { MODE_RECT, MODE_POINTER, MODE_SELECT, MODE_CHAR, SPACE, MODES } from './Defs.js'
 	import { ALIGN_CENTER, ALIGN_END, ALIGN_START, ALIGN_JUSTIFY } from './Defs.js'
 	import { INPUT_KEYS } from './Defs.js'
 
 	import { setTextChars, setRectChars, setCharChars } from './Chars.js'
-	import { onKeyup, onKeydown } from './Keys.js'
+	import { onKeyup, onKeydown, onTextboxKeyup, onTextboxKeydown } from './Keys.js'
 	import { _keys, _mode } from './Store.js'
 
 	import Keyboard from './Keyboard.svelte'
@@ -16,7 +18,12 @@
 	let cursor = { start: {}, end: {} }
 	let CURSOR = null
 
+	const SAY = m => console.log(`[App] ${m}`)
 	const w = window
+
+	w.zoomEl = null
+	w.canvasEl = null
+	w.zoomTransform = {}
 
 	w.DATA = []
 	w.OUT = []
@@ -24,8 +31,8 @@
 	w.HOVER = null
 	w.HIGH = []
 	w.ACTIVE = null
-	w.width = 40
-	w.height = 20
+	w.width = 24
+	w.height = 12
 
 
 
@@ -72,24 +79,25 @@
 		cursor.end = { y, x }
 
 		if ( $_mode == MODE_RECT ) {
-			console.log('[App] create rect')
+			SAY(' create rect')
 			STATES[MODE_RECT] = true
 			w.ACTIVE = {
 				type: MODE_RECT,
 				ref: createReference(),
 				chars: [], // OUT
 				...cursor,
-				text: 'Hello world', // PRE
+				text: LOREM.substring(0,10), // PRE
 				fill: 17,
 				corner: 0,
 				sides: 0,
+				padding: 2,
 				inited: false,
 				alignX: ALIGN_START,
 				alignY: ALIGN_CENTER,
 			}
 			w.DATA = [ w.ACTIVE, ...w.DATA ]
 		} else if ( $_mode == MODE_CHAR ) {
-			console.log('[App] create chars')
+			SAY(' create chars')
 			STATES[MODE_CHAR] = true
 			w.ACTIVE = {
 				type: MODE_CHAR,
@@ -102,7 +110,7 @@
 			}
 			w.DATA = [ w.ACTIVE, ...w.DATA ]
 		} else if ( $_mode == MODE_SELECT ) {
-			console.log('[App] create select')
+			SAY(' create select')
 			STATES[MODE_SELECT] = true
 			w.ACTIVE = {
 				type: MODE_SELECT,
@@ -112,12 +120,12 @@
 			}
 			draw()
 		} else if ($_mode == MODE_POINTER) {
-			console.log('[App] create pointer')
+			SAY(' create pointer')
 			let layer = getLayer(y,x)
 			if (!layer) {
 				w.HIGH = []
 				draw()
-				return console.log('[App] no item clicked')
+				return SAY(' no item clicked')
 			}
 			if (y == layer.end.y && x == layer.end.x) {
 				IS_RESIZING = true
@@ -237,7 +245,7 @@
 
 		if ( w.ACTIVE?.type == MODE_RECT) {
 			if (w.ACTIVE.start.x == w.ACTIVE.end.x || w.ACTIVE.start.y == w.ACTIVE.end.y) {
-				console.log('[App] deleting tiny rectangle')
+				SAY(' deleting tiny rectangle')
 				let cp = w.DATA
 				cp.shift()
 				w.DATA = cp
@@ -250,7 +258,7 @@
 				}
 			} else {
 				const { start, end } = w.DATA[0]
-				console.log('[App] inited new rectangle:', start, end)
+				SAY(' inited new rectangle:', start, end)
 				w.DATA[0].inited = true
 			}
 		}
@@ -276,10 +284,16 @@
 		}
 	})(w.width,w.height)
 
+	function awaitDraw() {
+		w.requestAnimationFrame( draw )
+	}
+
+	// w.DB = null
+	w.DB_TIMEOUT = null
 
 	function draw() {
 
-		console.log(`[App] draw`)
+		SAY(`🌱 drawn`)
 		setRectChars()
 		setTextChars()
 		setCharChars()
@@ -309,7 +323,45 @@
 				i += 1
 			}
 		}
+
+		if (w.DB_TIMEOUT) clearTimeout(w.DB_TIMEOUT)
+		w.DB_TIMEOUT = setTimeout( e => {
+			w.localStorage.setItem('DB', JSON.stringify(w.DATA))
+			SAY(`💾 saved`)
+		}, 1000)
+
 	}
+
+	onMount( async e => {
+		try {
+			w.DATA = JSON.parse(w.localStorage.getItem('DB'))
+			await awaitDraw()
+			SAY(`💾 loaded`)
+		} catch(err) {
+			console.warn(`💾 nothing loaded`)
+		}
+
+
+        w.zoomer = panzoom( w.zoomEl, {
+            maxZoom: 20,
+            minZoom: 0.02,
+            zoomDoubleClickSpeed: 1,
+            filterKey: e => true,
+            beforeMouseDown: e => {
+            	return e.target.classList.contains('char')
+            }
+        })
+
+        w.zoomer.on('transform', e => {
+            w.zoomTransform = w.zoomer.getTransform()
+        })
+        w.zoomer.on('pan', e => {
+        	w.isPanning = true
+        })
+        w.zoomer.on('panend', e => {
+        	w.isPanning = false
+        })
+	})
 
 
 	function getChar( y, x ) {
@@ -325,6 +377,7 @@
 
 	$: fontStyle = `
 		font-size: ${w.FONTSIZE}px;
+		line-height: 1em;
 		width: ${Math.round(w.FONTSIZE * 0.6)}px;
 		max-width: ${Math.round(w.FONTSIZE * 0.6)}px;
 		min-width: ${Math.round(w.FONTSIZE * 0.6)}px;
@@ -339,14 +392,14 @@
 	let metaKeys = []
 
 	const onKeydownPre = e => {
-		// console.log('[App] keydown ', e.code)
+		// SAY(' keydown ', e.code)
 		$_keys[e.code] = true
 		if (e.metaKey) metaKeys.push(e.code)
 		onKeydown( e )
 		draw()
 	}
 	const onKeyupPre = e => {
-		// console.log('[App] keyup ', e.code)
+		// SAY(' keyup ', e.code)
 		$_keys[e.code] = false
 		if (metaKeys.length > 0) {
 			for (const key of metaKeys) $_keys[key] = false
@@ -357,97 +410,60 @@
 	}
 
 	function deselectAll() {
+		console.log('?')
 		w.ACTIVE = null
 		w.HIGH = []
 		draw()
 	}
 
+	function onTextboxKeydownPre(e) {
+		onTextboxKeydown(e)
+		awaitDraw()
+	}
+
+	w.mousecursor = ''
+	w.isPanning = false
+
+	function onWindowMousemove(e ) {
+		const {classList} = e.target
+		if (w.isPanning) return
+		if (classList.contains('active')) {
+			w.mousecursor = 'pointer'
+		} else if (classList.contains('dragger')) {
+			w.mousecursor = ''
+		} else {
+			w.mousecursor = ''
+		}
+	} 
+
+
 </script>
 <svelte:window 
 	on:keydown={ onKeydownPre }
 	on:keyup={ onKeyupPre }
+	on:mousemove={ onWindowMousemove }
 	on:mouseup={ e => STATES.pressed = false } />
 <input type="text" id="capture" class="invisible hidden fixed" />
-<main class="sassis bg fill flex flex column monospace">
-	<nav class="bb1-solid flex row-space-between-center ">
-		<div class="flex row-flex-start-center cmr1 w100pc">
-			<h1 class="pointer f2 filled h100pc flex p1">ascii</h1>
-			{#if w.ACTIVE}
+<main class="sassis sink fill monospace overflow-hidden b10-solid {w.mousecursor}">
 
-				{#if w.ACTIVE.type == MODE_RECT}
-					<span>fill</span>
-					<input 
-						on:change={draw}
-						type="number" 
-						bind:value={w.ACTIVE.fill} />
-					<span>corner</span>
-					<input 
-						on:change={draw}
-						type="number" 
-						bind:value={w.ACTIVE.corner} />
-					<span>sides</span>
-					<input 
-						on:change={draw}
-						type="number" 
-						bind:value={w.ACTIVE.sides} />
-					<span>x</span>
-					<select 
-						on:change={draw}
-						bind:value={w.ACTIVE.alignX}>
-						{#each [ALIGN_START,ALIGN_CENTER,ALIGN_END, ALIGN_JUSTIFY] as opt}
-							<option value={opt}>{opt}</option>
-						{/each}
-					</select>
-					<span>y</span>
-					<select 
-						on:change={draw}
-						bind:value={w.ACTIVE.alignY}>
-						{#each [ALIGN_START,ALIGN_CENTER,ALIGN_END] as opt}
-							<option value={opt}>{opt}</option>
-						{/each}
-					</select>
-				{/if}
-			{:else}
-
-				<span>width</span>
-				<input 
-					type="number" 
-					bind:value={w.width} />
-
-				<span>height</span>
-				<input 
-					type="number" 
-					bind:value={w.height} />
-			{/if}
-		</div>
-	</nav>
-	<!-- 
-								class:filled={ w.HIGH?.[y]?.[x] } -->
-	<div 
-		class="grow mode-{$_mode} w100vw overflow-hidden flex row-flex-start-flex-start">
-		<nav id="toolbar" class="column flex bb1-solid br1-solid h100pc ">
-			{#each Object.keys(MODES) as tool, idx}
-				<button
-					on:mousedown={ e => ($_mode = tool)}
-					class:filled={$_mode == tool}
-					class="b0-solid text-left">
-					[{idx+1}] {tool}
-				</button>
-			{/each}
-		</nav>
 		<div 
-			id="workspace"
-			class="grow flex column-center-space-between rel block h100pc p1 overflow-hidden bg sink">
+			on:mousedown={ deselectAll }
+			class="dragger fill" />
+
+		<div 
+			bind:this={w.zoomEl}
+			id="zoom"
+			class="fill flex column-center-center">
 			<div 
-				on:mousedown={ deselectAll }
-				class="fill" />
-			<div 
+				bind:this={w.canvasEl}
 				id="canvas"
-				class="flex column-center-flex-start rel monospace user-select-none bg overflow-auto  b1-solid">
+				class="flex column-center-flex-start rel monospace user-select-none bg overflow-auto pop">
 				{#each w.OUT as line, y}
 					<div class="no-grow">
 						{#each line as char, x}
 							<span
+								class:active={char}
+								class:inactive={!char}
 								style={fontStyle}
 								class:b1-solid={w.HOVER?.y == y && w.HOVER?.x == x }
 								class="char rel"
@@ -461,26 +477,100 @@
 						{/each}
 					</div>
 				{/each}
-				<!-- {#each new Array(w.height) as line, y}
-					<div class="no-grow pop">
-						{#each new Array(w.width) as char, x}
-							<span
-								class="char rel"
-								on:mousemove={e => onMousemove(y,x)}
-								on:mouseup={e => onMouseup(y,x)}
-								on:mousedown={e => onMousedown(y,x)}
-								on:mouseover={e => onMouseover(y,x)}>
-								{@html 'x'}
-							</span>
-						{/each}
-					</div>
-				{/each} -->
 			</div>
 
-			<Keyboard />
-
 		</div>
-		<section id="panel" class="column flex column-space-between-flex-start bb1-solid bl1-solid h100pc grow w16em maxw16em minw16em">
+
+
+
+
+
+
+
+		<Panel title="Properties" right={20} top={100}>
+
+			<div class="flex column-stretch-flex-start p0-5">
+				{#if w.ACTIVE}
+
+					{#if w.ACTIVE.type == MODE_RECT}
+						<label>fill</label>
+						<input 
+							on:change={awaitDraw}
+							type="number" 
+							bind:value={w.ACTIVE.fill} />
+						<label>corner</label>
+						<input 
+							on:change={awaitDraw}
+							type="number" 
+							bind:value={w.ACTIVE.corner} />
+						<label>sides</label>
+						<input 
+							on:change={awaitDraw}
+							type="number" 
+							bind:value={w.ACTIVE.sides} />
+						<label>x</label>
+						<select 
+							on:change={awaitDraw}
+							bind:value={w.ACTIVE.alignX}>
+							{#each [ALIGN_START,ALIGN_CENTER,ALIGN_END, ALIGN_JUSTIFY] as opt}
+								<option value={opt}>{opt}</option>
+							{/each}
+						</select>
+						<label>y</label>
+						<select 
+							on:change={awaitDraw}
+							bind:value={w.ACTIVE.alignY}>
+							{#each [ALIGN_START,ALIGN_CENTER,ALIGN_END] as opt}
+								<option value={opt}>{opt}</option>
+							{/each}
+						</select>
+						<label class="checkbox">
+							<input 
+								on:change={awaitDraw}
+								type="checkbox" 
+								bind:checked={w.ACTIVE.whitespace} />
+							whitespace
+							<span />
+						</label>
+					{/if}
+				{:else}
+
+					<span>fontsize</span>
+					<input 
+						type="number" 
+						bind:value={w.FONTSIZE} />
+					<span>width</span>
+					<input 
+						type="number" 
+						bind:value={w.width} />
+
+					<span>height</span>
+					<input 
+						type="number" 
+						bind:value={w.height} />
+				{/if}
+			</div>
+		</Panel>
+
+		<Panel title="Tools" left={20} top={50}>
+
+			<nav id="toolbar" class="column flex">
+				{#each Object.keys(MODES) as tool, idx}
+					<div
+						on:mousedown={ e => ($_mode = tool)}
+						class:filled={$_mode == tool}
+						class="bb p0-5 text-left">
+						[{idx+1}] {tool}
+					</div>
+				{/each}
+			</nav>
+		</Panel>
+
+		<Panel title="Input" left={20} bottom={20}>
+			<Keyboard />
+		</Panel>
+
+		<Panel title="Layers" right={20} top={50}>
 			<div id="layers" class="flex overflow-auto column grow">
 				{#each w.DATA as layer, idx}
 					{#if layer.inited}
@@ -489,7 +579,7 @@
 							class="bb1-solid w100pc flex column">
 							<header 
 								class:filled={ layer?.ref == w.ACTIVE?.ref }
-								class="pointer plr1 ptb0-5 w100pc flex row-space-between-center">
+								class="pointer p0-5 w100pc flex row-space-between-center">
 								<div>{layer.type}</div>
 								<!-- <div class="flex row-stretch-stretch h100pc cp0-5  cbl1-solid">
 									<div class="">S</div>
@@ -499,24 +589,30 @@
 						</div>
 					{/if}
 				{/each}
-			</div>
+				{#if w.DATA.length == 0}
 
-			{#if w.ACTIVE}
-				{#if w.ACTIVE.type == MODE_RECT }
-					<div id="editor" class="flex column grow bt1-solid">
-						<div class="p1">INSPECTOR</div>
-
-						<textarea
-							on:keydown={draw}
-							class="flex grow b0-solid bt1-solid w100pc"
-							bind:value={w.ACTIVE.text} />
+					<div class="grow w100pc flex row-center-center italic p0-5 fade">
+						no layers
 					</div>
 				{/if}
-			{/if}
-			TEST
+			</div>
+		</Panel>
+
+
+			<Panel title="Text" right={20} bottom={20}>
+				<div class="minh16em minw24em grow flex column">
+					{#if w.ACTIVE?.type == MODE_RECT}
 						<textarea
-							on:keydown={draw}
-							class="flex grow b0-solid bt1-solid w100pc" />
-		</section>
-	</div>
+							on:keyup={onTextboxKeyup}
+							on:keydown={onTextboxKeydownPre}
+							class="flex grow w100pc h100pc grow b0-solid"
+							rows="4"
+							bind:value={w.ACTIVE.text} />
+					{:else}
+						<div class="grow w100pc flex row-center-center italic p0-5 fade">
+							nothing selected
+						</div>
+					{/if}
+				</div>
+			</Panel>
 </main>

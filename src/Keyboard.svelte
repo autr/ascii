@@ -6,7 +6,6 @@
 	const pattern = [12,12,10]
 
 	const w = window
-	$: current = BOARDS[$_keyboardIdx]
 
 
 	function setActiveElement(event) {
@@ -20,15 +19,36 @@
 	function onSetIndex(idx) {
 		$_keyboardIdx = idx 
 	}
+
+	let currentlyPressed = null
+	function onKeyMousedown(i, ii) {
+		const idx = i+(ii*12)
+		currentlyPressed = idx
+	}
+
+	function isKeyActive(i, ii, kys, curp, show) {
+		const idx = i+(ii*12)
+		return ( ( kys[KEYS[idx]] && show ) || curp == idx)
+	}
+
+	function getKeyIcon(i, ii) {
+		const idx = i+(ii*12)
+		return KEYS_ICONS[idx].toLowerCase()
+	}
+	function getKeySymbol(i,ii,kidx) {
+		const idx = i+(ii*12)
+		return BOARDS[kidx]?.[idx] || ''
+	}
 </script>
 
+<svelte:window on:mouseup={e => (currentlyPressed = null)} />
 <div class="flex column w100pc">
-	<div class="flex row pb1">
+	<div class="flex row">
 		{#each BOARD_NAMES as name,idx }
-			<div class="b1-solid pointer">
+			<div class="pointer">
 				<div 
-					on:click={e => onSetIndex(idx)}
-					class="flex bg row-center-center ptb0-5 plr1"
+					on:mousedown={e => onSetIndex(idx)}
+					class="flex bg row-center-center p0-5"
 					class:filled={$_keyboardIdx == idx}>
 					{name}
 				</div>
@@ -39,7 +59,7 @@
 		id="keyboard" 
 		class:fade={!$_showKeyboard}
 		class="flex column w100pc bl1-solid bt1-solid">
-		{#each pattern as count, idx}
+		{#each pattern as count, ii}
 			<div 
 				class="flex row">
 
@@ -47,13 +67,13 @@
 
 					<div 
 						class:fade={!$_showKeyboard}
-						class:filled={$_showKeyboard && $_keys[KEYS[i+(idx*12)]]}
+						class:filled={ isKeyActive(i, ii, $_keys, currentlyPressed, $_showKeyboard) }
 						class="grow ptb0-5 pointer flex column-center-center br1-solid bb1-solid no-basis bg"
-						class:none={!current[i+(idx*12)]}>
+						on:mousedown={ e => onKeyMousedown(i, ii)}>
 						<span class="pb0-4">
-							{KEYS_ICONS[i+(idx*12)].toLowerCase()}
+							{getKeyIcon(i,ii)}
 						</span> 
-						<span class="pop f2">{current?.[i+(idx*12)] || ''}</span>
+						<span class="f3">{getKeySymbol(i,ii,$_keyboardIdx)}</span>
 					</div>
 				{/each}
 				{#if count == 10}
