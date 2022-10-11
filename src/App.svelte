@@ -31,8 +31,8 @@
 	w.HOVER = null
 	w.HIGH = []
 	w.ACTIVE = null
-	w.width = 24
-	w.height = 12
+	w.width = 80
+	w.height = 32
 
 
 
@@ -334,7 +334,8 @@
 
 	onMount( async e => {
 		try {
-			w.DATA = JSON.parse(w.localStorage.getItem('DB'))
+			SAY(`💾 loading...`)
+			w.DATA = JSON.parse(w.localStorage.getItem('DB')) || []
 			await awaitDraw()
 			SAY(`💾 loaded`)
 		} catch(err) {

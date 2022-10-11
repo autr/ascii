@@ -3,18 +3,22 @@ import { get, set } from 'svelte/store'
 import { _keyboardIdx, _keys, _activeElement, _mode } from './Store.js'
 import * as diff from 'diff'
 
-navigator.keyboard.getLayoutMap().then(keyboardLayoutMap => {
-	w.keyboardLayoutMap = keyboardLayoutMap
+if (navigator?.keyboard?.getLayoutMap) {
 
-	const input = document.getElementById('capture')
-	console.log(input)
-	input.addEventListener('keydown', e => {
-		// console.log('Layout keydown', e.key, e)
+	navigator.keyboard.getLayoutMap().then(keyboardLayoutMap => {
+		w.keyboardLayoutMap = keyboardLayoutMap
+
+		const input = document.getElementById('capture')
+		console.log(input)
+		input.addEventListener('keydown', e => {
+			// console.log('Layout keydown', e.key, e)
+		})
+		input.dispatchEvent(new Event('focus'));
+		input.dispatchEvent(new KeyboardEvent('keydown',{'code':'KeyQ'}));
+		console.log(`[Keys] keyboardLayoutMap`, Object.keys(keyboardLayoutMap), Object.values(keyboardLayoutMap))
 	})
-	input.dispatchEvent(new Event('focus'));
-	input.dispatchEvent(new KeyboardEvent('keydown',{'code':'KeyQ'}));
-	console.log(`[Keys] keyboardLayoutMap`, Object.keys(keyboardLayoutMap), Object.values(keyboardLayoutMap))
-})
+
+}
 
 
 const w = window
@@ -97,7 +101,7 @@ export async function onKeyup( e ) {
 
 export async function onKeydown( e ) {
 
-	const layoutKey = keyboardLayoutMap.get(e.code)
+	// const layoutKey = keyboardLayoutMap.get(e.code)
 
 	SAY(`👇 ${e.code}`)
 

@@ -29,7 +29,7 @@
 				bottom = o.bottom
 				minimised = o.minimised
 				SAY(`💠 loaded ${key} positions`)
-				console.log({top,left,right,bottom})
+				// console.log({top,left,right,bottom})
 			} catch(err) {}
 		}
 	})
